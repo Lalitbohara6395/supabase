@@ -127,6 +127,9 @@ export default function TodoPage() { // Our main functional component for the pa
       <Link href="/company" className="mt-10 text-slate-400 font-medium hover:text-blue-500 transition-colors">
         Company →
       </Link>
+         <Link href="/about" className="mt-10 text-slate-400 font-medium hover:text-blue-500 transition-colors">
+        Company →
+      </Link>
     </div>
   );
 }
