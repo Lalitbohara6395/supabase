@@ -30,9 +30,10 @@ export async function POST(request) {
       ])
       .select(); // 👈 important
 
-    if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
+   if (error) {
+  console.log("SUPABASE ERROR:", error); // 👈 ye add karo
+  return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+}
 
     return NextResponse.json({ success: true, data }, { status: 201 });
 

@@ -1,118 +1,147 @@
-'use client'; // Tell Next.js this is a Client Component so we can use state and interactivity
+'use client';
 
-import { useState, useEffect } from 'react'; // Import state and effect hooks from React
-import Link from 'next/link'; // Import Link for internal routing
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export default function TodoPage() { // Our main functional component for the page
-  const [todos, setTodos] = useState([]); // Create state to store our list of todos
-  const [input, setInput] = useState(''); // Create state to manage the text in our input field
-  const [loading, setLoading] = useState(true); // Create a loading state to show while fetching data
+export default function TodoPage() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { // Hook that runs once when the component finishes mounting
-    fetchTodos(); // Call our custom fetch function
-  }, []); // Empty dependency array ensures this only runs once
+  useEffect(() => {
+    fetchTodos();
+  }, []);
 
-  const fetchTodos = async () => { // Function to grab all todos from our API
+  // ✅ FETCH TODOS
+  const fetchTodos = async () => {
     try {
-      const res = await fetch('/api/todos'); // Send a GET request to our API endpoint
-      const json = await res.json(); // Convert the raw response into a JSON object
-      if (json.success) setTodos(json.data); // If it was successful, save the data to our state
+      const res = await fetch('/api/todos/supabase');
+      const json = await res.json();
+      if (json.success) setTodos(json.data);
     } catch (error) {
       console.error('Failed to fetch:', error);
     } finally {
-      setLoading(false); // Turn off the loading indicator
+      setLoading(false);
     }
   };
 
-  const addTodo = async (e) => { // Function to handle form submission for new todos
-    e.preventDefault(); // Prevent the default browser behavior of refreshing the page
-    if (!input) return; // Exit early if the input is empty text
+  // ✅ ADD TODO
+  const addTodo = async (e) => {
+    e.preventDefault();
+    if (!input) return;
 
     try {
-      const res = await fetch('/api/todos', { // Send a POST request to add the new task
-        method: 'POST', // HTTP method POST for creation
-        headers: { 'Content-Type': 'application/json' }, // Tell the server we are sending JSON data
-        body: JSON.stringify({ task: input }), // Convert our input state into a JSON string
+      const res = await fetch('/api/todos/supabase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: input }),
       });
 
-      const json = await res.json(); // Wait for the response JSON
-      if (json.success) { // If adding was successful...
-        setTodos([json.data, ...todos]); // ...add the new todo to the beginning of our current list
-        setInput(''); // ...clear the input field for the next task
+      const json = await res.json();
+      if (json.success) {
+        setTodos([...json.data, ...todos]); // add on top
+        setInput('');
       }
     } catch (error) {
       console.error('Failed to add:', error);
     }
   };
 
-  const deleteTodo = async (id) => { // Function to remove a task
+  // ✅ DELETE TODO
+  const deleteTodo = async (id) => {
     try {
-      const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' }); // Call our dynamic API route with the ID
-      if (res.ok) { // If deletion worked...
-        setTodos(todos.filter((t) => t._id !== id)); // ...remove that item from our local UI state
+      const res = await fetch('/api/todos/supabase', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+
+      if (res.ok) {
+        setTodos(todos.filter((t) => t.id !== id));
       }
     } catch (error) {
       console.error('Failed to delete:', error);
     }
   };
 
-  const toggleTodo = async (id, completed) => { // Function to check/uncheck a task
+  // ✅ TOGGLE TODO
+  const toggleTodo = async (id, is_completed) => {
     try {
-      const res = await fetch(`/api/todos/${id}`, { // PATCH request to the specific ID
-        method: 'PATCH', // Update method
-        headers: { 'Content-Type': 'application/json' }, // Specify JSON format
-        body: JSON.stringify({ completed: !completed }), // Send the opposite of its current status
+      const res = await fetch('/api/todos/supabase', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_completed: !is_completed }),
       });
-      const json = await res.json(); // Parse result
-      if (json.success) { // If toggle worked...
-        setTodos(todos.map((t) => (t._id === id ? json.data : t))); // ...update only that one item in our list
+
+      if (res.ok) {
+        setTodos(
+          todos.map((t) =>
+            t.id === id ? { ...t, is_completed: !is_completed } : t
+          )
+        );
       }
     } catch (error) {
       console.error('Failed to toggle:', error);
     }
   };
 
-  return ( // UI Layout
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4"> {/* Page wrapper */}
-      <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden"> {/* Content card */}
-        <div className="bg-blue-600 p-8 text-white text-center"> {/* Card header with gradient-like blue */}
-          <h1 className="text-3xl font-bold tracking-tight">Focus Tasks</h1> {/* App Title */}
-          <p className="mt-2 text-pink-100 font-medium italic">Simple, smooth, and styled.</p> {/* Subtitle */}
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4">
+      <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden">
+        
+        <div className="bg-blue-600 p-8 text-white text-center">
+          <h1 className="text-3xl font-bold">Focus Tasks</h1>
+          <p className="mt-2 italic">Simple, smooth, and styled.</p>
         </div>
 
-        <div className="p-8"> {/* Body padding */}
-          <form onSubmit={addTodo} className="flex gap-3 mb-8"> {/* Input form */}
+        <div className="p-8">
+          {/* ADD FORM */}
+          <form onSubmit={addTodo} className="flex gap-3 mb-8">
             <input
               type="text"
-              className="flex-1 rounded-xl border-slate-200 border-2 p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="flex-1 border-2 p-3 rounded-xl"
               placeholder="What's your next move?"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <button className="bg-blue-600 text-white font-bold px-6 py-3 rounded-xl hover:bg-blue-700 active:scale-95 transition-all">
+            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl">
               Add
             </button>
           </form>
 
-          {loading ? (<div className="text-center py-10 text-slate-400 animate-pulse">Loading your tasks...</div>) : ( // Status check
-            <div className="space-y-3"> {/* Task list spacing */}
-              {todos.length === 0 ? (<p className="text-center text-slate-400 italic">No tasks today. Enjoy!</p>) : ( // Empty check
-                todos.map((todo) => ( // Loop tasks
-                  <div key={todo._id} className="group flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-transparent hover:border-blue-100 transition-all shadow-sm"> {/* Task item */}
-                    <div className="flex items-center gap-4"> {/* Inner content */}
+          {/* LIST */}
+          {loading ? (
+            <div className="text-center py-10">Loading...</div>
+          ) : (
+            <div className="space-y-3">
+              {todos.length === 0 ? (
+                <p className="text-center">No tasks today.</p>
+              ) : (
+                todos.map((todo) => (
+                  <div key={todo.id} className="flex justify-between p-4 bg-slate-50 rounded-xl">
+                    
+                    <div className="flex items-center gap-4">
                       <input
                         type="checkbox"
-                        checked={todo.completed}
-                        onChange={() => toggleTodo(todo._id, todo.completed)}
-                        className="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        checked={todo.is_completed}
+                        onChange={() => toggleTodo(todo.id, todo.is_completed)}
                       />
-                      <span className={`${todo.completed ? 'line-through text-slate-300' : 'text-slate-700 font-medium'}`}>
-                        {todo.task}
+
+                      <span
+                        className={
+                          todo.is_completed
+                            ? 'line-through text-gray-400'
+                            : 'text-black'
+                        }
+                      >
+                        {todo.title}
                       </span>
                     </div>
-                    <button onClick={() => deleteTodo(todo._id)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all text-sm font-bold">
-                      Delete
+
+                    <button onClick={() => deleteTodo(todo.id)}>
+                      ❌
                     </button>
+
                   </div>
                 ))
               )}
@@ -121,15 +150,7 @@ export default function TodoPage() { // Our main functional component for the pa
         </div>
       </div>
 
-      <Link href="/about" className="mt-10 text-slate-400 font-medium hover:text-blue-500 transition-colors">
-        About this project →
-      </Link>
-      <Link href="/company" className="mt-10 text-slate-400 font-medium hover:text-blue-500 transition-colors">
-        Company →
-      </Link>
-         <Link href="/about" className="mt-10 text-slate-400 font-medium hover:text-blue-500 transition-colors">
-        Company →
-      </Link>
+      <Link href="/about" className="mt-6">About →</Link>
     </div>
   );
 }
