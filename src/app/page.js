@@ -8,9 +8,9 @@ export default function TodoPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  /*useEffect(() => {
     fetchTodos();
-  }, []);
+  }, []);*/
 
   // ✅ FETCH TODOS
   const fetchTodos = async () => {

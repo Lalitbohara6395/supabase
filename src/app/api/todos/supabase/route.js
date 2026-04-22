@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import supabase from '@/lib/supabase'; // ✅ FIXED
 
 // GET: fetch all todos
 export async function GET() {
@@ -9,7 +9,10 @@ export async function GET() {
     .order("id", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 400 }
+    );
   }
 
   return NextResponse.json({ success: true, data });
@@ -28,21 +31,27 @@ export async function POST(request) {
           is_completed: false
         }
       ])
-      .select(); // 👈 important
+      .select();
 
-   if (error) {
-  console.log("SUPABASE ERROR:", error); // 👈 ye add karo
-  return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-}
+    if (error) {
+      console.log("SUPABASE ERROR:", error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, data }, { status: 201 });
 
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 400 }
+    );
   }
 }
 
-// DELETE: remove todo
+// DELETE
 export async function DELETE(req) {
   const { id } = await req.json();
 
@@ -52,13 +61,16 @@ export async function DELETE(req) {
     .eq('id', id);
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ success: true });
 }
 
-// PUT: update todo (toggle checkbox)
+// PUT (update)
 export async function PUT(req) {
   const { id, is_completed } = await req.json();
 
@@ -68,7 +80,10 @@ export async function PUT(req) {
     .eq('id', id);
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ success: true });
